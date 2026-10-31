@@ -11,6 +11,7 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   add: (product: Omit<CartItem, 'qty'>) => void;
+  decrement: (id: number) => void;
   remove: (id: number) => void;
   clear: () => void;
 }
@@ -21,14 +22,22 @@ export const useCartStore = create<CartState>()(
       items: [],
       add: (product) =>
         set((state) => {
-          const found = state.items.find((i) => i.id === product.id);
+          const found = state.items.find((item) => item.id === product.id);
           return {
             items: found
-              ? state.items.map((i) => (i.id === product.id ? { ...i, qty: i.qty + 1 } : i))
+              ? state.items.map((item) =>
+                  item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
+                )
               : [...state.items, { ...product, qty: 1 }],
           };
         }),
-      remove: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+      decrement: (id) =>
+        set((state) => ({
+          items: state.items
+            .map((item) => (item.id === id ? { ...item, qty: item.qty - 1 } : item))
+            .filter((item) => item.qty > 0),
+        })),
+      remove: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clear: () => set({ items: [] }),
     }),
     { name: 'cart' },

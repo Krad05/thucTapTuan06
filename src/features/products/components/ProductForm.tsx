@@ -11,29 +11,42 @@ export function ProductForm({ initial, submitting, onSubmit }: Props) {
   const [title, setTitle] = useState(initial.title);
   const [price, setPrice] = useState(String(initial.price));
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    onSubmit({ title: title.trim(), price: Number(price) });
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle || Number(price) < 0 || !Number.isFinite(Number(price))) return;
+    onSubmit({ title: normalizedTitle, price: Number(price) });
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit}>
+    <form className="product-form" onSubmit={handleSubmit}>
+      <label htmlFor="product-title">Tên sản phẩm</label>
       <input
+        id="product-title"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Tên sản phẩm"
+        onChange={(event) => setTitle(event.target.value)}
+        placeholder="Ví dụ: Tai nghe không dây"
         required
       />
-      <input
-        type="number"
-        min={0}
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
-        required
-      />
-      <button type="submit" disabled={submitting}>
-        Lưu
-      </button>
+      <span className="field-hint">Tên rõ ràng giúp khách hàng dễ tìm sản phẩm.</span>
+      <label htmlFor="product-price">Giá bán (USD)</label>
+      <div className="price-input-wrap">
+        <span>$</span>
+        <input
+          id="product-price"
+          type="number"
+          min={0}
+          step="0.01"
+          value={price}
+          onChange={(event) => setPrice(event.target.value)}
+          required
+        />
+      </div>
+      <div className="form-actions">
+        <button className="button button-primary" type="submit" disabled={submitting}>
+          {submitting ? 'Đang lưu...' : 'Lưu sản phẩm'}
+        </button>
+      </div>
     </form>
   );
 }

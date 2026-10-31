@@ -8,9 +8,9 @@ interface ModalContextValue {
 const ModalContext = createContext<ModalContextValue | null>(null);
 
 function useModal() {
-  const ctx = useContext(ModalContext);
-  if (!ctx) throw new Error('Modal.* phải nằm bên trong <Modal>');
-  return ctx;
+  const context = useContext(ModalContext);
+  if (!context) throw new Error('Modal.* phải nằm bên trong <Modal>');
+  return context;
 }
 
 export function Modal({ children }: { children: ReactNode }) {
@@ -20,20 +20,43 @@ export function Modal({ children }: { children: ReactNode }) {
 
 Modal.Trigger = function Trigger({ children }: { children: ReactNode }) {
   const { setOpen } = useModal();
-  return <span onClick={() => setOpen(true)}>{children}</span>;
+  return (
+    <span className="modal-trigger" onClick={() => setOpen(true)}>
+      {children}
+    </span>
+  );
 };
 
 Modal.Content = function Content({ children }: { children: ReactNode }) {
-  const { open } = useModal();
+  const { open, setOpen } = useModal();
   if (!open) return null;
   return (
-    <div className="overlay">
-      <div className="modal">{children}</div>
+    <div
+      className="overlay"
+      role="presentation"
+      onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}
+    >
+      <div className="modal" role="dialog" aria-modal="true">
+        {children}
+      </div>
     </div>
   );
 };
 
-Modal.Close = function Close({ children }: { children: ReactNode }) {
+Modal.Close = function Close({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick?: (close: () => void) => void;
+}) {
   const { setOpen } = useModal();
-  return <span onClick={() => setOpen(false)}>{children}</span>;
+  return (
+    <span
+      className="modal-close"
+      onClick={() => (onClick ? onClick(() => setOpen(false)) : setOpen(false))}
+    >
+      {children}
+    </span>
+  );
 };

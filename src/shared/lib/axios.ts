@@ -1,9 +1,11 @@
 import axios from 'axios';
-// Ngoại lệ có chủ đích: import thẳng store (không qua index.ts) để tránh vòng lặp import.
+// Ngoại lệ có chủ đích: import thẳng store để tránh vòng lặp import qua index.ts.
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useCartStore } from '@/features/cart/store/cartStore';
 
-export const authClient = axios.create({ baseURL: import.meta.env.VITE_AUTH_URL });
-export const apiClient = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+export const authClient = axios.create({ baseURL: apiBaseUrl });
+export const apiClient = axios.create({ baseURL: apiBaseUrl });
 
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
@@ -14,7 +16,11 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) useAuthStore.getState().logout();
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+      useCartStore.getState().clear();
+      window.dispatchEvent(new Event('auth:unauthorized'));
+    }
     return Promise.reject(error);
   },
 );
